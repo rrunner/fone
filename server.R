@@ -96,19 +96,18 @@ shinyServer(function(input, output, session) {
 
   # retrieve results
   output$result_data <- renderTable({
-    loc <- local_data()
-    round <- as.integer(loc[loc$circuit ==
-                            input$circuit, "round"])
+    loc <- local_data()[ ,c("circuit", "round")]
+    round <- as.integer(loc[loc$circuit == input$circuit, "round"])
     res <- download_results(input$year, round)
     get_result_list(res$MRData$RaceTable$Races[[1]]$Results)
   }, include.rownames=FALSE)
 
   # world map
   output$map.plot <- renderPlot({
-    positions <- local_data()
+    positions <- local_data()[ ,c("circuit", "long", "lat")]
     print(map +
-          geom_point(data=positions, aes(long, lat), color="black", size=1) +
+          geom_point(data=positions, aes(long, lat), color="black", size=1.5) +
           geom_point(data=get_position(positions, input$circuit),
-                     aes(long, lat), color="red", size=1))
+                     aes(long, lat), color="red", size=1.5))
   })
 })
