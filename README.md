@@ -1,4 +1,5 @@
-### fone - a simple F1 result presenter
+fone - a simple F1 result presenter
+===================================
 
 ## Overview
 *fone* is a [Shiny](http://shiny.rstudio.com/) application that displays the race locations on a world map and presents the race results in tabs. *fone* fetches JSON objects from [Ergast API](http://ergast.com/mrd/). 
