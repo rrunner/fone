@@ -1,5 +1,5 @@
 library(shiny)
-library(ggplot2)
+suppressPackageStartupMessages(library(ggplot2))
 library(RJSONIO)
 library(maps)
 
