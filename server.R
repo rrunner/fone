@@ -12,7 +12,9 @@ map_theme <- theme(axis.line = element_blank(),
                    panel.grid = element_blank(),
                    panel.background = element_rect(fill = "lightsteelblue"))
 
-map <- ggplot() + coord_cartesian(ylim=c(-60, 70), xlim=c(-150, 180)) + borders(database="world", colour="grey", fill="darkseagreen") + map_theme
+map <- ggplot() + coord_cartesian(ylim=c(-60, 70), xlim=c(-150, 180)) +
+       borders(database="world", colour="grey", fill="darkseagreen") +
+       map_theme
 
 
 
