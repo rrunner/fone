@@ -121,6 +121,7 @@ shinyServer(function(input, output, session) {
 
   # retrieve result data
   result_data <- reactive({
+    if (input$circuit == "") return(data.frame())
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
     download_results(input$year, round)
     res_lst[[paste0("y", input$year)]][[round]]
@@ -135,12 +136,12 @@ shinyServer(function(input, output, session) {
   observe({
     updateSelectInput(session=session, inputId="circuit",
                       choices=circuits(),
-                      selected=circuits()[1])
+                      selected="")
   })
 
   # pass text to output
   output$text <- renderText({
-    "No data in table"
+    "No data in table. Select circuit above."
   })
 
   # pass table to output
