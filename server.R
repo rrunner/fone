@@ -2,6 +2,7 @@ library(shiny)
 suppressPackageStartupMessages(library(ggplot2))
 library(RJSONIO)
 library(maps)
+library(lubridate)
 
 # world map
 map_theme <- theme(axis.line = element_blank(),
