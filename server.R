@@ -42,12 +42,12 @@ convert_locations <- function(d, no_races=length(d)) {
                            stringsAsFactors=FALSE)
 
   for (i in seq(no_races)) {
-    local_data[i, ] <- c(d[[i]]$round,
-                         d[[i]]$Circuit$circuitName,
-                         as.numeric(d[[i]]$Circuit$Location[1]),
-                         as.numeric(d[[i]]$Circuit$Location[2]),
-                         unname(d[[i]]$Circuit$Location[3]),
-                         as.Date(d[[i]]$date) < Sys.Date())
+    local_data[i, ] <- list(as.integer(d[[i]]$round),
+                            d[[i]]$Circuit$circuitName,
+                            as.numeric(d[[i]]$Circuit$Location[1]),
+                            as.numeric(d[[i]]$Circuit$Location[2]),
+                            unname(d[[i]]$Circuit$Location[3]),
+                            as.Date(d[[i]]$date) < Sys.Date())
   }
 
   local_data
@@ -85,20 +85,19 @@ get_result_list <- function(d, no_drivers=length(d)) {
                             stringsAsFactors=FALSE)
 
   for (i in seq(no_drivers)) {
-    result_list[i, ] <- c(d[[i]]$position,
-                          d[[i]]$number,
-                          paste(d[[i]]$Driver["givenName"],
-                                d[[i]]$Driver["familyName"], sep=" "),
-                          d[[i]]$Constructor["name"],
-                          d[[i]]$laps,
-                          d[[i]]$grid,
-                          d[[i]]$status,
-                          d[[i]]$points)
+    result_list[i, ] <- list(as.integer(d[[i]]$position),
+                             as.integer(d[[i]]$number),
+                             paste(d[[i]]$Driver["givenName"],
+                                   d[[i]]$Driver["familyName"], sep=" "),
+                             d[[i]]$Constructor["name"],
+                             as.integer(d[[i]]$laps),
+                             as.integer(d[[i]]$grid),
+                             d[[i]]$status,
+                             as.numeric(d[[i]]$points))
   }
 
   result_list
 }
-
 
 
 
@@ -117,6 +116,14 @@ shinyServer(function(input, output, session) {
   # retrieve location data
   local_data <- reactive({
     download_locations(input$year)
+    loc_lst[[paste0("y", input$year)]]
+  })
+
+  # retrieve result data
+  result_data <- reactive({
+    round <- local_data()[local_data()$circuit == input$circuit, "round"]
+    download_results(input$year, round)
+    res_lst[[paste0("y", input$year)]][[round]]
   })
 
   # retrieve circuits data
@@ -124,26 +131,33 @@ shinyServer(function(input, output, session) {
     local_data()[local_data()$event_occurred == TRUE, "circuit"]
   })
 
-  # generate circuits to input list dynamically
+  # generate circuits to input list dynamically (no output)
   observe({
     updateSelectInput(session=session, inputId="circuit",
                       choices=circuits(),
                       selected=circuits()[1])
   })
 
-  # retrieve results
-  output$result_data <- renderTable({
-    loc <- local_data()[ ,c("circuit", "round")]
-    round <- as.integer(loc[loc$circuit == input$circuit, "round"])
-    download_results(input$year, round)
+  # pass text to output
+  output$text <- renderText({
+    "No data in table"
+  })
+
+  # pass table to output
+  output$table <- renderTable({
+    result_data()
   }, include.rownames=FALSE)
 
-  # world map
-  output$map.plot <- renderPlot({
+  # pass UI to output
+  output$text_or_table <- renderUI({
+    if (nrow(result_data()) == 0) textOutput("text") else tableOutput("table")
+  })
+
+  # pass plot to output
+  output$plot <- renderPlot({
     positions <- local_data()[ ,c("circuit", "long", "lat")]
-    print(map +
-          geom_point(data=positions, aes(long, lat), color="black", size=1.5) +
+    map + geom_point(data=positions, aes(long, lat), color="black", size=1.5) +
           geom_point(data=get_position(positions, input$circuit),
-                     aes(long, lat), color="red", size=1.5))
+                     aes(long, lat), color="red", size=1.5)
   })
 })
