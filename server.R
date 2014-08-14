@@ -26,7 +26,8 @@ loc_lst <- setNames(loc_lst, paste0("y", seq(year(today()), 1950, by=-1)))
 download_locations <- function(year) {
   if (!is.null(loc_lst[[paste0("y", year)]])) return(invisible(0))
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
-  loc_lst[[paste0("y", year)]] <<- fromJSON(url, encoding="utf-8")
+  temp <- fromJSON(url, encoding="utf-8")
+  loc_lst[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
   return(invisible(0))
 }
 
@@ -65,7 +66,9 @@ res_lst <- lapply(res_lst, function(x) vector(mode="list", length=30))
 download_results <- function(year, round) {
   if (!is.null((res_lst[[paste0("y", year)]][[round]]))) return(invisible(0))
   url <- paste("http://ergast.com/api/f1", year, round, "results.json", sep="/")
-  res_lst[[paste0("y", year)]][[round]] <<- fromJSON(url, encoding="utf-8")
+  temp <- fromJSON(url, encoding="utf-8")
+  res_lst[[paste0("y", year)]][[round]] <<-
+    get_result_list(temp$MRData$RaceTable$Races[[1]]$Results)
   return(invisible(0))
 }
 
@@ -113,8 +116,7 @@ shinyServer(function(input, output, session) {
 
   # retrieve location data
   local_data <- reactive({
-    loc <- download_locations(input$year)
-    convert_locations(loc$MRData$RaceTable$Races)
+    download_locations(input$year)
   })
 
   # retrieve circuits data
@@ -133,8 +135,7 @@ shinyServer(function(input, output, session) {
   output$result_data <- renderTable({
     loc <- local_data()[ ,c("circuit", "round")]
     round <- as.integer(loc[loc$circuit == input$circuit, "round"])
-    res <- download_results(input$year, round)
-    get_result_list(res$MRData$RaceTable$Races[[1]]$Results)
+    download_results(input$year, round)
   }, include.rownames=FALSE)
 
   # world map
