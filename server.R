@@ -2,7 +2,6 @@ library(shiny)
 suppressPackageStartupMessages(library(ggplot2))
 library(RJSONIO)
 library(maps)
-library(lubridate)
 
 # world map
 map_theme <- theme(axis.line = element_blank(),
@@ -21,8 +20,8 @@ map <- ggplot() + coord_cartesian(ylim=c(-60, 70), xlim=c(-150, 180)) +
 
 # list of location data (to enable caching)
 loc_lst <- new.env(parent=emptyenv())
-loc_lst <- vector(mode="list", length=length(seq(year(today()), 1950, by=-1)))
-loc_lst <- setNames(loc_lst, paste0("y", seq(year(today()), 1950, by=-1)))
+loc_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+loc_lst <- setNames(loc_lst, paste0("y", seq(last_year, 1950, by=-1)))
 
 # download file with race locations for a year
 download_locations <- function(year) {
@@ -60,8 +59,8 @@ convert_locations <- function(d, no_races=length(d)) {
 
 # list of result data (to enable caching), defaults to max 30 races per year
 res_lst <- new.env(parent=emptyenv())
-res_lst <- vector(mode="list", length=length(seq(year(today()), 1950, by=-1)))
-res_lst <- setNames(res_lst, paste0("y", seq(year(today()), 1950, by=-1)))
+res_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+res_lst <- setNames(res_lst, paste0("y", seq(last_year, 1950, by=-1)))
 res_lst <- lapply(res_lst, function(x) vector(mode="list", length=30))
 
 # download file with race results for a given race and year

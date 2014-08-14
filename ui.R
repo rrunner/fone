@@ -1,5 +1,4 @@
 library(shiny)
-library(lubridate)
 
 # user interface
 shinyUI(fluidPage(
@@ -11,7 +10,7 @@ shinyUI(fluidPage(
   fluidRow(
     column(3,
            selectInput('year', 'Select year',
-                       choices=seq(year(today()), 1950, by=-1))
+                       choices=seq(last_year, 1950, by=-1))
     ),
     column(8,
            selectInput('circuit', 'Select circuit', choices=NULL)
