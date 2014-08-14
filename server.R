@@ -144,13 +144,14 @@ shinyServer(function(input, output, session) {
   })
 
   # pass table to output
-  output$table <- renderTable({
+  output$table <- renderDataTable({
     result_data()
-  }, include.rownames=FALSE)
+  })
 
   # pass UI to output
   output$text_or_table <- renderUI({
-    if (nrow(result_data()) == 0) textOutput("text") else tableOutput("table")
+    if (nrow(result_data()) == 0) textOutput("text")
+    else dataTableOutput("table")
   })
 
   # pass plot to output
