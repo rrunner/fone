@@ -1,4 +1,5 @@
 library(shiny)
+library(rCharts)
 
 # user interface
 shinyUI(fluidPage(
