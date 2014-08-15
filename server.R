@@ -29,7 +29,7 @@ download_locations <- function(year) {
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
   temp <- fromJSON(url, encoding="utf-8")
   loc_lst[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
-  return(invisible(0))
+  invisible(0)
 }
 
 # transform lists of location data into a data.frame object
@@ -70,7 +70,7 @@ download_results <- function(year, round) {
   temp <- fromJSON(url, encoding="utf-8")
   res_lst[[paste0("y", year)]][[round]] <<-
     get_result_list(temp$MRData$RaceTable$Races[[1]]$Results)
-  return(invisible(0))
+  invisible(0)
 }
 
 # transform lists of results data into a data.frame object
