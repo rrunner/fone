@@ -134,7 +134,8 @@ shinyServer(function(input, output, session) {
 
   # retrieve result data
   result_data <- reactive({
-    if (input$circuit == "") return(data.frame())
+    # return NULL if circuit is not selected (default behaviour)
+    if (input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
     download_results(input$year, round)
     res_lst[[paste0("y", input$year)]][[round]]
@@ -150,14 +151,14 @@ shinyServer(function(input, output, session) {
     # fix to avoid the following in the log:
     # Error in fdata[1, 1] : incorrect number of dimensions
     # (this does not happen with renderTable)
-    if (nrow(result_data()) == 0) return()
+    if (is.null(result_data())) return()
     result_data()
   }, options=list(iDisplayLength=10,
                   aLengthMenu=c(3, 10, nrow(result_data()))))
 
   # pass UI to output
   output$text_or_table <- renderUI({
-    if (nrow(result_data()) == 0) return(textOutput("text"))
+    if (is.null(result_data())) return(textOutput("text"))
     dataTableOutput("table")
   })
 
