@@ -120,14 +120,6 @@ shinyServer(function(input, output, session) {
     loc_lst[[paste0("y", input$year)]]
   })
 
-  # retrieve result data
-  result_data <- reactive({
-    if (input$circuit == "") return(data.frame())
-    round <- local_data()[local_data()$circuit == input$circuit, "round"]
-    download_results(input$year, round)
-    res_lst[[paste0("y", input$year)]][[round]]
-  })
-
   # retrieve circuits data
   circuits <- reactive({
     local_data()[local_data()$event_occurred == TRUE, "circuit"]
@@ -140,20 +132,32 @@ shinyServer(function(input, output, session) {
                       selected="")
   })
 
+  # retrieve result data
+  result_data <- reactive({
+    if (input$circuit == "") return(data.frame())
+    round <- local_data()[local_data()$circuit == input$circuit, "round"]
+    download_results(input$year, round)
+    res_lst[[paste0("y", input$year)]][[round]]
+  })
+
   # pass text to output
   output$text <- renderText({
-    "No data in table. Select circuit above."
+    "Select circuit above to display race results."
   })
 
   # pass table to output
   output$table <- renderDataTable({
+    # fix to avoid the following in the log:
+    # Error in fdata[1, 1] : incorrect number of dimensions
+    # (this does not happen with renderTable)
+    if (nrow(result_data()) == 0) return()
     result_data()
   })
 
   # pass UI to output
   output$text_or_table <- renderUI({
-    if (nrow(result_data()) == 0) textOutput("text")
-    else dataTableOutput("table")
+    if (nrow(result_data()) == 0) return(textOutput("text"))
+    dataTableOutput("table")
   })
 
   # pass plot to output
