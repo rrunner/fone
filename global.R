@@ -1,4 +1,5 @@
 library(lubridate)
+library(RJSONIO)
 
 # Create global variable "last_year" to use in server.R and ui.R,
 # should the Ergast database not be loaded with location data before
