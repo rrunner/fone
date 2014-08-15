@@ -152,7 +152,8 @@ shinyServer(function(input, output, session) {
     # (this does not happen with renderTable)
     if (nrow(result_data()) == 0) return()
     result_data()
-  })
+  }, options=list(iDisplayLength=10,
+                  aLengthMenu=c(3, 10, nrow(result_data()))))
 
   # pass UI to output
   output$text_or_table <- renderUI({
