@@ -1,22 +1,6 @@
 library(shiny)
-suppressPackageStartupMessages(library(ggplot2))
+library(rCharts)
 library(RJSONIO)
-library(maps)
-
-# world map
-map_theme <- theme(axis.line = element_blank(),
-                   axis.text = element_blank(),
-                   axis.ticks = element_blank(),
-                   axis.title = element_blank(),
-                   panel.grid = element_blank(),
-                   panel.background = element_rect(fill = "lightsteelblue"))
-
-map <- ggplot() + coord_cartesian(ylim=c(-60, 70), xlim=c(-150, 180)) +
-       borders(database="world", colour="grey", fill="darkseagreen") +
-       map_theme
-
-
-
 
 # list of location data (to enable caching)
 loc_lst <- new.env(parent=emptyenv())
@@ -103,9 +87,9 @@ get_result_list <- function(d, no_drivers=length(d)) {
 
 
 
-# get position for a given circuit
+# get position for a given circuit (returns an numeric vector)
 get_position <- function(d, circuit) {
-  d[which(d$circuit == circuit), c("lat", "long")]
+  as.numeric(d[d$circuit == circuit, c("lat", "long")])
 }
 
 
@@ -143,7 +127,7 @@ shinyServer(function(input, output, session) {
 
   # pass text to output
   output$text <- renderText({
-    "Select circuit above to display race results."
+    "Select circuit above to display race results"
   })
 
   # pass table to output
@@ -162,11 +146,26 @@ shinyServer(function(input, output, session) {
     dataTableOutput("table")
   })
 
-  # pass plot to output
-  output$plot <- renderPlot({
-    positions <- local_data()[ ,c("circuit", "long", "lat")]
-    map + geom_point(data=positions, aes(long, lat), color="black", size=1.5) +
-          geom_point(data=get_position(positions, input$circuit),
-                     aes(long, lat), color="red", size=1.5)
+  # pass map to output
+  output$map <- renderMap({
+    positions <- local_data()[ ,c("circuit", "lat", "long")]
+
+    # Leaflet map
+    lmap <- Leaflet$new()
+    lmap$set(width=850, height=420)
+
+    if (input$circuit != "") {
+      pos <- get_position(positions, input$circuit)
+      lmap$setView(c(pos), zoom=12)
+      lmap$marker(c(pos), bindPopup=input$circuit)
+    } else {
+      lmap$setView(c(20, 15), zoom=2)
+      for (i in seq(nrow(positions))) {
+        lmap$marker(c(positions$lat[i], positions$long[i]),
+                    bindPopup=positions$circuit[i])
+      }
+    }
+
+    lmap
   })
 })
