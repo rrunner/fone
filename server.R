@@ -132,10 +132,6 @@ shinyServer(function(input, output, session) {
 
   # pass table to output
   output$table <- renderDataTable({
-    # fix to avoid the following in the log:
-    # Error in fdata[1, 1] : incorrect number of dimensions
-    # (this does not happen with renderTable)
-    if (is.null(result_data())) return()
     result_data()
   }, options=list(iDisplayLength=10,
                   aLengthMenu=c(3, 10, nrow(result_data()))))
