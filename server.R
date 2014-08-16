@@ -1,38 +1,22 @@
 library(shiny)
-suppressPackageStartupMessages(library(ggplot2))
+library(rCharts)
 library(RJSONIO)
-library(maps)
 
-# world map
-map_theme <- theme(axis.line = element_blank(),
-                   axis.text = element_blank(),
-                   axis.ticks = element_blank(),
-                   axis.title = element_blank(),
-                   panel.grid = element_blank(),
-                   panel.background = element_rect(fill = "lightsteelblue"))
+# store location data (mutable environment to enable caching)
+loc <- new.env(parent=emptyenv())
+loc <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+loc <- setNames(loc, paste0("y", seq(last_year, 1950, by=-1)))
 
-map <- ggplot() + coord_cartesian(ylim=c(-60, 70), xlim=c(-150, 180)) +
-       borders(database="world", colour="grey", fill="darkseagreen") +
-       map_theme
-
-
-
-
-# list of location data (to enable caching)
-loc_lst <- new.env(parent=emptyenv())
-loc_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-loc_lst <- setNames(loc_lst, paste0("y", seq(last_year, 1950, by=-1)))
-
-# download file with race locations for a year
+# download race locations for a given year
 download_locations <- function(year) {
-  if (!is.null(loc_lst[[paste0("y", year)]])) return(invisible(0))
+  if (!is.null(loc[[paste0("y", year)]])) return(invisible(0))
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
   temp <- fromJSON(url, encoding="utf-8")
-  loc_lst[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
+  loc[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
   invisible(0)
 }
 
-# transform lists of location data into a data.frame object
+# transform location data into a data.frame object
 convert_locations <- function(d, no_races=length(d)) {
   local_data <- data.frame(round=integer(no_races),
                            circuit=character(no_races),
@@ -57,24 +41,25 @@ convert_locations <- function(d, no_races=length(d)) {
 
 
 
-# list of result data (to enable caching), defaults to max 30 races per year
-res_lst <- new.env(parent=emptyenv())
-res_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-res_lst <- setNames(res_lst, paste0("y", seq(last_year, 1950, by=-1)))
-res_lst <- lapply(res_lst, function(x) vector(mode="list", length=30))
+# store result data (mutable environment to enable caching)
+# defaults to max 30 races per year
+res <- new.env(parent=emptyenv())
+res <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+res <- setNames(res, paste0("y", seq(last_year, 1950, by=-1)))
+res <- lapply(res, function(x) vector(mode="list", length=30))
 
-# download file with race results for a given race and year
+# download race results for a given year and race
 download_results <- function(year, round) {
-  if (!is.null((res_lst[[paste0("y", year)]][[round]]))) return(invisible(0))
+  if (!is.null((res[[paste0("y", year)]][[round]]))) return(invisible(0))
   url <- paste("http://ergast.com/api/f1", year, round, "results.json", sep="/")
   temp <- fromJSON(url, encoding="utf-8")
-  res_lst[[paste0("y", year)]][[round]] <<-
-    get_result_list(temp$MRData$RaceTable$Races[[1]]$Results)
+  res[[paste0("y", year)]][[round]] <<-
+    convert_results(temp$MRData$RaceTable$Races[[1]]$Results)
   invisible(0)
 }
 
-# transform lists of results data into a data.frame object
-get_result_list <- function(d, no_drivers=length(d)) {
+# transform results data into a data.frame object
+convert_results <- function(d, no_drivers=length(d)) {
   result_list <- data.frame(Position=integer(no_drivers),
                             Number=integer(no_drivers),
                             Driver=character(no_drivers),
@@ -103,9 +88,9 @@ get_result_list <- function(d, no_drivers=length(d)) {
 
 
 
-# get position for a given circuit
+# get position for any given circuit
 get_position <- function(d, circuit) {
-  d[which(d$circuit == circuit), c("lat", "long")]
+  d[d$circuit == circuit, c("lat", "long")]
 }
 
 
@@ -117,19 +102,18 @@ shinyServer(function(input, output, session) {
   # retrieve location data
   local_data <- reactive({
     download_locations(input$year)
-    loc_lst[[paste0("y", input$year)]]
+    loc[[paste0("y", input$year)]]
   })
 
-  # retrieve circuits data
+  # retrieve circuit data
   circuits <- reactive({
     local_data()[local_data()$event_occurred == TRUE, "circuit"]
   })
 
-  # generate circuits to input list dynamically (no output)
-  observe({
-    updateSelectInput(session=session, inputId="circuit",
-                      choices=circuits(),
-                      selected="")
+  # generate circuits to UI dynamically
+  output$circuit_list <- renderUI({
+    selectInput(inputId='circuit', label='Select circuit',
+                choices=c("", circuits()))
   })
 
   # retrieve result data
@@ -138,20 +122,16 @@ shinyServer(function(input, output, session) {
     if (input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
     download_results(input$year, round)
-    res_lst[[paste0("y", input$year)]][[round]]
+    res[[paste0("y", input$year)]][[round]]
   })
 
   # pass text to output
   output$text <- renderText({
-    "Select circuit above to display race results."
+    "Select circuit above to display race results"
   })
 
   # pass table to output
   output$table <- renderDataTable({
-    # fix to avoid the following in the log:
-    # Error in fdata[1, 1] : incorrect number of dimensions
-    # (this does not happen with renderTable)
-    if (is.null(result_data())) return()
     result_data()
   }, options=list(iDisplayLength=10,
                   aLengthMenu=c(3, 10, nrow(result_data()))))
@@ -162,11 +142,26 @@ shinyServer(function(input, output, session) {
     dataTableOutput("table")
   })
 
-  # pass plot to output
-  output$plot <- renderPlot({
-    positions <- local_data()[ ,c("circuit", "long", "lat")]
-    map + geom_point(data=positions, aes(long, lat), color="black", size=1.5) +
-          geom_point(data=get_position(positions, input$circuit),
-                     aes(long, lat), color="red", size=1.5)
+  # pass map to output
+  output$map <- renderMap({
+    positions <- local_data()[ ,c("circuit", "lat", "long")]
+
+    # leaflet map
+    lmap <- Leaflet$new()
+    lmap$set(width=850, height=420)
+
+    if (!is.null(input$circuit) && input$circuit != "") {
+      pos <- get_position(positions, input$circuit)
+      lmap$setView(c(pos$lat, pos$long), zoom=12)
+      lmap$marker(c(pos$lat, pos$long), bindPopup=input$circuit)
+    } else {
+      lmap$setView(c(20, 15), zoom=2)
+      for (i in seq(nrow(positions))) {
+        lmap$marker(c(positions$lat[i], positions$long[i]),
+                    bindPopup=positions$circuit[i])
+      }
+    }
+
+    lmap
   })
 })

@@ -1,4 +1,5 @@
 library(shiny)
+library(rCharts)
 
 # user interface
 shinyUI(fluidPage(
@@ -8,20 +9,20 @@ shinyUI(fluidPage(
 
   # user inputs
   fluidRow(
-    column(3,
+    column(2,
            selectInput('year', 'Select year',
                        choices=seq(last_year, 1950, by=-1))
     ),
     column(8,
-           selectInput('circuit', 'Select circuit', choices=NULL)
+           uiOutput('circuit_list')
     )
   ),
 
   # display plot and result list in tabs
   mainPanel(
     tabsetPanel(
-      tabPanel("Race locations", plotOutput("plot")),
+      tabPanel("Race locations", showOutput('map', 'leaflet')),
       tabPanel("Race results", uiOutput("text_or_table"))
-    )
+    ), width=10
   )
 ))
