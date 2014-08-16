@@ -119,7 +119,7 @@ shinyServer(function(input, output, session) {
   # retrieve result data
   result_data <- reactive({
     # return NULL if circuit is not selected (default behaviour)
-    if (is.null(input$circuit) || input$circuit == "") return()
+    if (input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
     download_results(input$year, round)
     res[[paste0("y", input$year)]][[round]]
