@@ -3,16 +3,16 @@ library(rCharts)
 library(RJSONIO)
 
 # store location data (mutable environment to enable caching)
-loc_lst <- new.env(parent=emptyenv())
-loc_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-loc_lst <- setNames(loc_lst, paste0("y", seq(last_year, 1950, by=-1)))
+loc <- new.env(parent=emptyenv())
+loc <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+loc <- setNames(loc, paste0("y", seq(last_year, 1950, by=-1)))
 
 # download race locations for a given year
 download_locations <- function(year) {
-  if (!is.null(loc_lst[[paste0("y", year)]])) return(invisible(0))
+  if (!is.null(loc[[paste0("y", year)]])) return(invisible(0))
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
   temp <- fromJSON(url, encoding="utf-8")
-  loc_lst[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
+  loc[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
   invisible(0)
 }
 
@@ -43,23 +43,23 @@ convert_locations <- function(d, no_races=length(d)) {
 
 # store result data (mutable environment to enable caching)
 # defaults to max 30 races per year
-res_lst <- new.env(parent=emptyenv())
-res_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-res_lst <- setNames(res_lst, paste0("y", seq(last_year, 1950, by=-1)))
-res_lst <- lapply(res_lst, function(x) vector(mode="list", length=30))
+res <- new.env(parent=emptyenv())
+res <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+res <- setNames(res, paste0("y", seq(last_year, 1950, by=-1)))
+res <- lapply(res, function(x) vector(mode="list", length=30))
 
 # download race results for a given year and race
 download_results <- function(year, round) {
-  if (!is.null((res_lst[[paste0("y", year)]][[round]]))) return(invisible(0))
+  if (!is.null((res[[paste0("y", year)]][[round]]))) return(invisible(0))
   url <- paste("http://ergast.com/api/f1", year, round, "results.json", sep="/")
   temp <- fromJSON(url, encoding="utf-8")
-  res_lst[[paste0("y", year)]][[round]] <<-
-    get_result_list(temp$MRData$RaceTable$Races[[1]]$Results)
+  res[[paste0("y", year)]][[round]] <<-
+    convert_results(temp$MRData$RaceTable$Races[[1]]$Results)
   invisible(0)
 }
 
 # transform results data into a data.frame object
-get_result_list <- function(d, no_drivers=length(d)) {
+convert_results <- function(d, no_drivers=length(d)) {
   result_list <- data.frame(Position=integer(no_drivers),
                             Number=integer(no_drivers),
                             Driver=character(no_drivers),
@@ -102,7 +102,7 @@ shinyServer(function(input, output, session) {
   # retrieve location data
   local_data <- reactive({
     download_locations(input$year)
-    loc_lst[[paste0("y", input$year)]]
+    loc[[paste0("y", input$year)]]
   })
 
   # retrieve circuit data
@@ -122,7 +122,7 @@ shinyServer(function(input, output, session) {
     if (is.null(input$circuit) || input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
     download_results(input$year, round)
-    res_lst[[paste0("y", input$year)]][[round]]
+    res[[paste0("y", input$year)]][[round]]
   })
 
   # pass text to output
