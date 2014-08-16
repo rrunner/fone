@@ -2,12 +2,12 @@ library(shiny)
 library(rCharts)
 library(RJSONIO)
 
-# list of location data (to enable caching)
+# store location data (mutable environment to enable caching)
 loc_lst <- new.env(parent=emptyenv())
 loc_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
 loc_lst <- setNames(loc_lst, paste0("y", seq(last_year, 1950, by=-1)))
 
-# download file with race locations for a year
+# download race locations for a given year
 download_locations <- function(year) {
   if (!is.null(loc_lst[[paste0("y", year)]])) return(invisible(0))
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
@@ -16,7 +16,7 @@ download_locations <- function(year) {
   invisible(0)
 }
 
-# transform lists of location data into a data.frame object
+# transform location data into a data.frame object
 convert_locations <- function(d, no_races=length(d)) {
   local_data <- data.frame(round=integer(no_races),
                            circuit=character(no_races),
@@ -41,13 +41,14 @@ convert_locations <- function(d, no_races=length(d)) {
 
 
 
-# list of result data (to enable caching), defaults to max 30 races per year
+# store result data (mutable environment to enable caching)
+# defaults to max 30 races per year
 res_lst <- new.env(parent=emptyenv())
 res_lst <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
 res_lst <- setNames(res_lst, paste0("y", seq(last_year, 1950, by=-1)))
 res_lst <- lapply(res_lst, function(x) vector(mode="list", length=30))
 
-# download file with race results for a given race and year
+# download race results for a given year and race
 download_results <- function(year, round) {
   if (!is.null((res_lst[[paste0("y", year)]][[round]]))) return(invisible(0))
   url <- paste("http://ergast.com/api/f1", year, round, "results.json", sep="/")
@@ -57,7 +58,7 @@ download_results <- function(year, round) {
   invisible(0)
 }
 
-# transform lists of results data into a data.frame object
+# transform results data into a data.frame object
 get_result_list <- function(d, no_drivers=length(d)) {
   result_list <- data.frame(Position=integer(no_drivers),
                             Number=integer(no_drivers),
@@ -87,7 +88,7 @@ get_result_list <- function(d, no_drivers=length(d)) {
 
 
 
-# get position for a given circuit (returns an numeric vector)
+# get position for any given circuit
 get_position <- function(d, circuit) {
   d[d$circuit == circuit, c("lat", "long")]
 }
@@ -104,7 +105,7 @@ shinyServer(function(input, output, session) {
     loc_lst[[paste0("y", input$year)]]
   })
 
-  # retrieve circuits data
+  # retrieve circuit data
   circuits <- reactive({
     local_data()[local_data()$event_occurred == TRUE, "circuit"]
   })
@@ -149,7 +150,7 @@ shinyServer(function(input, output, session) {
   output$map <- renderMap({
     positions <- local_data()[ ,c("circuit", "lat", "long")]
 
-    # Leaflet map
+    # leaflet map
     lmap <- Leaflet$new()
     lmap$set(width=850, height=420)
 
