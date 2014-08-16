@@ -89,7 +89,7 @@ get_result_list <- function(d, no_drivers=length(d)) {
 
 # get position for a given circuit (returns an numeric vector)
 get_position <- function(d, circuit) {
-  as.numeric(d[d$circuit == circuit, c("lat", "long")])
+  d[d$circuit == circuit, c("lat", "long")]
 }
 
 
@@ -155,8 +155,8 @@ shinyServer(function(input, output, session) {
 
     if (!is.null(input$circuit) && input$circuit != "") {
       pos <- get_position(positions, input$circuit)
-      lmap$setView(c(pos), zoom=12)
-      lmap$marker(c(pos), bindPopup=input$circuit)
+      lmap$setView(c(pos$lat, pos$long), zoom=12)
+      lmap$marker(c(pos$lat, pos$long), bindPopup=input$circuit)
     } else {
       lmap$setView(c(20, 15), zoom=2)
       for (i in seq(nrow(positions))) {
