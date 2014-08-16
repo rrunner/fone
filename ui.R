@@ -14,7 +14,7 @@ shinyUI(fluidPage(
                        choices=seq(last_year, 1950, by=-1))
     ),
     column(8,
-           selectInput('circuit', 'Select circuit', choices=NULL)
+           uiOutput('circuit_list')
     )
   ),
 

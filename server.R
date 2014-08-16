@@ -109,17 +109,16 @@ shinyServer(function(input, output, session) {
     local_data()[local_data()$event_occurred == TRUE, "circuit"]
   })
 
-  # generate circuits to input list dynamically (no output)
-  observe({
-    updateSelectInput(session=session, inputId="circuit",
-                      choices=circuits(),
-                      selected="")
+  # generate circuits to UI dynamically
+  output$circuit_list <- renderUI({
+    selectInput(inputId='circuit', label='Select circuit',
+                choices=c("", circuits()))
   })
 
   # retrieve result data
   result_data <- reactive({
     # return NULL if circuit is not selected (default behaviour)
-    if (input$circuit == "") return()
+    if (is.null(input$circuit) || input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
     download_results(input$year, round)
     res_lst[[paste0("y", input$year)]][[round]]
@@ -154,7 +153,7 @@ shinyServer(function(input, output, session) {
     lmap <- Leaflet$new()
     lmap$set(width=850, height=420)
 
-    if (input$circuit != "") {
+    if (!is.null(input$circuit) && input$circuit != "") {
       pos <- get_position(positions, input$circuit)
       lmap$setView(c(pos), zoom=12)
       lmap$marker(c(pos), bindPopup=input$circuit)
