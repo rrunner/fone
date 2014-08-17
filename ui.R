@@ -5,7 +5,7 @@ library(rCharts)
 shinyUI(fluidPage(
 
   # application title
-  titlePanel("Formula 1: Race results"),
+  titlePanel("Formula 1: Race locations and results"),
 
   # user inputs
   fluidRow(
