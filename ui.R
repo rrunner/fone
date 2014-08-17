@@ -23,7 +23,8 @@ shinyUI(fluidPage(
     tabsetPanel(
       tabPanel("Race locations", showOutput('map', 'leaflet'), value="location"),
       tabPanel("Race results", uiOutput("text_or_table"), value="result"),
-      id="whichTab"
+      id="whichTab",
+      type="pills"
     ), width=10
   )
 ))
