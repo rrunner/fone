@@ -105,6 +105,12 @@ shinyServer(function(input, output, session) {
     loc[[paste0("y", input$year)]]
   })
 
+  # focus "race location tab" when user selects another year
+  observe({
+    input$year
+    updateTabsetPanel(session, "whichTab", selected="location")
+  })
+
   # generate circuits to UI dynamically
   output$circuit_list <- renderUI({
     selectInput(inputId='circuit', label='Select circuit:',

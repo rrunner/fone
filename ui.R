@@ -21,8 +21,9 @@ shinyUI(fluidPage(
   # display plot and result list in tabs
   mainPanel(
     tabsetPanel(
-      tabPanel("Race locations", showOutput('map', 'leaflet')),
-      tabPanel("Race results", uiOutput("text_or_table"))
+      tabPanel("Race locations", showOutput('map', 'leaflet'), value="location"),
+      tabPanel("Race results", uiOutput("text_or_table"), value="result"),
+      id="whichTab"
     ), width=10
   )
 ))
