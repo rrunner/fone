@@ -117,6 +117,21 @@ shinyServer(function(input, output, session) {
     # return NULL if circuit is not selected (default behaviour)
     if (input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
+
+    # Issue
+    # Replicate issue:
+    # - browse the result tab and select a circuit (*)
+    # - select a new year
+    # -  -> local_data() contains data for the new selected year
+    # -  -> circuit_list gets updated
+    # - you would expect that input$circuit == ""
+    #    -> this is not the case since it contains the previous value (at *)
+    # - an error occurs if local_data() does not contain input$circuit
+    # Resolve:
+    # - if error, round is evaluated to logical(0)
+    # - fix by testing on zero length
+    if (length(round) == 0) return()
+
     download_results(input$year, round)
     res[[paste0("y", input$year)]][[round]]
   })
