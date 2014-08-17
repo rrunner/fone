@@ -105,15 +105,11 @@ shinyServer(function(input, output, session) {
     loc[[paste0("y", input$year)]]
   })
 
-  # retrieve circuit data
-  circuits <- reactive({
-    local_data()[local_data()$event_occurred == TRUE, "circuit"]
-  })
-
   # generate circuits to UI dynamically
   output$circuit_list <- renderUI({
     selectInput(inputId='circuit', label='Select circuit',
-                choices=c("", circuits()))
+                choices=c("", local_data()[local_data()$event_occurred == TRUE,
+                                           "circuit"]))
   })
 
   # retrieve result data
