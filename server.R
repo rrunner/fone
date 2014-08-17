@@ -107,7 +107,7 @@ shinyServer(function(input, output, session) {
 
   # generate circuits to UI dynamically
   output$circuit_list <- renderUI({
-    selectInput(inputId='circuit', label='Select circuit',
+    selectInput(inputId='circuit', label='Select circuit:',
                 choices=c("", local_data()[local_data()$event_occurred == TRUE,
                                            "circuit"]))
   })

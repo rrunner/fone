@@ -10,7 +10,7 @@ shinyUI(fluidPage(
   # user inputs
   fluidRow(
     column(2,
-           selectInput('year', 'Select year',
+           selectInput('year', 'Select year:',
                        choices=seq(last_year, 1950, by=-1))
     ),
     column(8,
