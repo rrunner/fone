@@ -66,20 +66,24 @@ convert_results <- function(d, no_drivers=length(d)) {
                             Constructor=character(no_drivers),
                             Laps=integer(no_drivers),
                             Grid=integer(no_drivers),
+                            Time=character(no_drivers),
                             Status=character(no_drivers),
                             Points=numeric(no_drivers),
                             stringsAsFactors=FALSE)
 
   for (i in seq(no_drivers)) {
-    result_list[i, ] <- list(as.integer(d[[i]]$position),
-                             as.integer(d[[i]]$number),
-                             paste(d[[i]]$Driver["givenName"],
-                                   d[[i]]$Driver["familyName"], sep=" "),
-                             d[[i]]$Constructor["name"],
-                             as.integer(d[[i]]$laps),
-                             as.integer(d[[i]]$grid),
-                             d[[i]]$status,
-                             as.numeric(d[[i]]$points))
+    result_list[i, ] <-
+      list(
+        as.integer(d[[i]]$position),
+        as.integer(d[[i]]$number),
+        paste(d[[i]]$Driver["givenName"], d[[i]]$Driver["familyName"], sep=" "),
+        d[[i]]$Constructor["name"],
+        as.integer(d[[i]]$laps),
+        as.integer(d[[i]]$grid),
+        if (!is.null(d[[i]]$Time[2])) d[[i]]$Time[2] else "",
+        d[[i]]$status,
+        as.numeric(d[[i]]$points)
+      )
   }
 
   result_list
