@@ -7,11 +7,21 @@ loc <- new.env(parent=emptyenv())
 loc <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
 loc <- setNames(loc, paste0("y", seq(last_year, 1950, by=-1)))
 
+# store result data (mutable environment to enable caching)
+res <- new.env(parent=emptyenv())
+res <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
+res <- setNames(res, paste0("y", seq(last_year, 1950, by=-1)))
+
 # download race locations for a given year
 download_locations <- function(year) {
   if (!is.null(loc[[paste0("y", year)]])) return(invisible(0))
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
   temp <- fromJSON(url, encoding="utf-8")
+
+  # initialise result list for given year
+  no_races <- as.numeric(temp$MRData$total)
+  res[[paste0("y", year)]] <<- vector(mode="list", length=no_races)
+
   loc[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
   invisible(0)
 }
@@ -37,16 +47,6 @@ convert_locations <- function(d, no_races=length(d)) {
 
   local_data
 }
-
-
-
-
-# store result data (mutable environment to enable caching)
-# defaults to max 30 races per year
-res <- new.env(parent=emptyenv())
-res <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-res <- setNames(res, paste0("y", seq(last_year, 1950, by=-1)))
-res <- lapply(res, function(x) vector(mode="list", length=30))
 
 # download race results for a given year and race
 download_results <- function(year, round) {
