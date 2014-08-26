@@ -33,7 +33,7 @@ convert_locations <- function(d, no_races=length(d)) {
                            lat=numeric(no_races),
                            long=numeric(no_races),
                            city=character(no_races),
-                           race_date=numeric(no_races),
+                           race_date=character(no_races),
                            stringsAsFactors=FALSE)
 
   for (i in seq(no_races)) {
@@ -42,7 +42,7 @@ convert_locations <- function(d, no_races=length(d)) {
                             as.numeric(d[[i]]$Circuit$Location[1]),
                             as.numeric(d[[i]]$Circuit$Location[2]),
                             unname(d[[i]]$Circuit$Location[3]),
-                            as.Date(d[[i]]$date))
+                            d[[i]]$date)
   }
 
   local_data
@@ -117,7 +117,7 @@ shinyServer(function(input, output, session) {
 
   # generate circuit list for past race events
   circuits <- reactive({
-    local_data()[local_data()$race_date < Sys.Date(), "circuit"]
+    local_data()[as.Date(local_data()$race_date) < Sys.Date(), "circuit"]
   })
 
   # generate circuits to UI dynamically
