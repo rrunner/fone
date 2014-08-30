@@ -7,11 +7,10 @@ shinyUI(fluidPage(
   # application title
   titlePanel("Formula 1: Race locations and results"),
 
-  # user inputs
+  # user inputs (rendered by server)
   fluidRow(
     column(2,
-           selectInput('year', 'Select year:',
-                       choices=seq(last_year, 1950, by=-1))
+           uiOutput('year_list')
     ),
     column(8,
            uiOutput('circuit_list')

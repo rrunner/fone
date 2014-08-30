@@ -2,15 +2,18 @@ library(shiny)
 library(rCharts)
 library(RJSONIO)
 
+# current year
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
+
 # store location data (mutable environment to enable caching)
 loc <- new.env(parent=emptyenv())
-loc <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-loc <- setNames(loc, paste0("y", seq(last_year, 1950, by=-1)))
+loc <- vector(mode="list", length=length(seq(current_year, 1950, by=-1)))
+loc <- setNames(loc, paste0("y", seq(current_year, 1950, by=-1)))
 
 # store result data (mutable environment to enable caching)
 res <- new.env(parent=emptyenv())
-res <- vector(mode="list", length=length(seq(last_year, 1950, by=-1)))
-res <- setNames(res, paste0("y", seq(last_year, 1950, by=-1)))
+res <- vector(mode="list", length=length(seq(current_year, 1950, by=-1)))
+res <- setNames(res, paste0("y", seq(current_year, 1950, by=-1)))
 
 # download race locations for a given year
 download_locations <- function(year) {
@@ -113,10 +116,30 @@ shinyServer(function(input, output, session) {
     updateTabsetPanel(session, "whichTab", selected="location")
   })
 
+  # retrieve year and round of last updated race in Ergast database
+  yr <- reactive({
+    # make a poll every 10 minutes
+    invalidateLater(6e+05, session)
+    temp <- fromJSON("http://ergast.com/api/f1/current/last.json",
+                     encoding="utf-8")
+    list(
+      last_year  = as.numeric(temp$MRData$RaceTable$season),
+      last_round = as.numeric(temp$MRData$RaceTable$round)
+    )
+  })
+
+  # generate years to UI dynamically
+  output$year_list <- renderUI({
+    selectInput(inputId='year', label='Select year:',
+                choices=c(seq(yr()$last_year, 1950, by=-1)))
+  })
+
   # generate circuit list for past race events
   circuits <- reactive({
-    if (input$year == last_year) {
-      local_data()[1:last_round, "circuit"]
+    # test for NULL when the app starts and UI list is not yet created
+    if (is.null(input$year)) return(NULL)
+    if (input$year == yr()$last_year) {
+      local_data()[1:yr()$last_round, "circuit"]
     } else {
       local_data()[ ,"circuit"]
     }
