@@ -130,7 +130,7 @@ shinyServer(function(input, output, session) {
     )
   })
 
-  # generate years to UI dynamically
+  # generate years dynamically (render UI)
   output$year_list <- renderUI({
     selectInput(inputId='year', label='Select year:',
                 choices=c(seq(yr()$last_year, 1950, by=-1)))
@@ -147,7 +147,7 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  # generate circuits to UI dynamically
+  # generate circuits dynamically (render UI)
   output$circuit_list <- renderUI({
     selectInput(inputId='circuit', label='Select circuit:',
                 choices=c("", circuits()))
@@ -188,7 +188,7 @@ shinyServer(function(input, output, session) {
   }, options=list(iDisplayLength=10,
                   aLengthMenu=c(3, 10, nrow(result_data()))))
 
-  # pass Wikipedia link to output as HTML
+  # pass Wikipedia link to output (render UI)
   output$wikipedia <- renderUI({
     # return NULL if circuit is not selected (default behaviour)
     if (input$circuit == "") return()
@@ -200,13 +200,13 @@ shinyServer(function(input, output, session) {
     tags$a(href=url, target="_blank", "Race info on Wikipedia")
     })
 
-  # pass UI to output
+  # pass text or table to output (render UI)
   output$text_or_table <- renderUI({
     if (is.null(result_data())) return(textOutput("text"))
     dataTableOutput("table")
   })
 
-  # pass map to output
+  # pass map to output (render UI)
   output$map <- renderMap({
     positions <- local_data()[ ,c("circuit", "lat", "long")]
 
