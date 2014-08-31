@@ -193,10 +193,9 @@ shinyServer(function(input, output, session) {
     # return NULL if circuit is not selected (default behaviour)
     if (input$circuit == "") return()
 
+    url <- local_data()[local_data()$circuit == input$circuit, "url"]
     # guardian if wikipedia link is not available in Ergast
-    url <- ""
-    try(url <- local_data()[local_data()$circuit == input$circuit, "url"])
-    if (length(url) == 0 || url == "") return()
+    if (length(url) == 0) return()
 
     tags$a(href=url, target="_blank", "Race info on Wikipedia")
     })
