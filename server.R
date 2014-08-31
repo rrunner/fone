@@ -36,6 +36,7 @@ convert_locations <- function(d, no_races=length(d)) {
                            lat=numeric(no_races),
                            long=numeric(no_races),
                            city=character(no_races),
+                           url=character(no_races),
                            stringsAsFactors=FALSE)
 
   for (i in seq(no_races)) {
@@ -43,7 +44,8 @@ convert_locations <- function(d, no_races=length(d)) {
                             d[[i]]$Circuit$circuitName,
                             as.numeric(d[[i]]$Circuit$Location[1]),
                             as.numeric(d[[i]]$Circuit$Location[2]),
-                            unname(d[[i]]$Circuit$Location[3]))
+                            unname(d[[i]]$Circuit$Location[3]),
+                            d[[i]]$url)
   }
 
   local_data
@@ -185,6 +187,19 @@ shinyServer(function(input, output, session) {
     result_data()
   }, options=list(iDisplayLength=10,
                   aLengthMenu=c(3, 10, nrow(result_data()))))
+
+  # pass Wikipedia link to output as HTML
+  output$wikipedia <- renderUI({
+    # return NULL if circuit is not selected (default behaviour)
+    if (input$circuit == "") return()
+
+    # guardian if wikipedia link is not available in Ergast
+    url <- ""
+    try(url <- local_data()[local_data()$circuit == input$circuit, "url"])
+    if (length(url) == 0 || url == "") return()
+
+    tags$a(href=url, target="_blank", "Race info on Wikipedia")
+    })
 
   # pass UI to output
   output$text_or_table <- renderUI({

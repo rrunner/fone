@@ -22,9 +22,13 @@ shinyUI(fluidPage(
   mainPanel(
     tabsetPanel(
       tabPanel("Race locations", showOutput('map', 'leaflet'), value="location"),
-      tabPanel("Race results", uiOutput("text_or_table"), value="result"),
+      tabPanel("Race results",
+               uiOutput("wikipedia"),
+               tags$br(),
+               uiOutput("text_or_table"), value="result"),
       id="whichTab",
       type="pills"
-    ), width=10
+      ),
+    width=10)
   )
-))
+)
