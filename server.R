@@ -170,7 +170,7 @@ shinyServer(function(input, output, session) {
     if (input$circuit == "") return()
     round <- local_data()[local_data()$circuit == input$circuit, "round"]
 
-    # Issue
+    # Issue #1
     # Replicate issue:
     # - browse the result tab and select a circuit (*)
     # - select a new year
@@ -207,9 +207,10 @@ shinyServer(function(input, output, session) {
   output$wikipedia <- renderUI({
     # return NULL if circuit is not selected (default behaviour)
     if (input$circuit == "") return()
-
     url <- local_data()[local_data()$circuit == input$circuit, "url"]
-    # guardian if wikipedia link is not available in Ergast
+
+    # this guardian is related to Issue #1
+    # url is character(0) if error
     if (length(url) == 0) return()
 
     tags$a(href = url, target = "_blank", "Race info on Wikipedia")

@@ -45,7 +45,12 @@ shinyUI(fluidPage(
       tabPanel("Race locations", showOutput("map", "leaflet"),
                value = "location"),
       tabPanel("Race results",
+
+               # uiOutput("wikipedia") returns
+               # <div class="shiny-html-output"></div>
+               # if wikipedia object is NULL (no output in UI)
                uiOutput("wikipedia"),
+
                tags$br(),
                uiOutput("text_or_table"), value = "result"),
       id   = "whichTab",
