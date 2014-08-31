@@ -4,9 +4,30 @@ library(rCharts)
 # user interface
 shinyUI(fluidPage(
 
-  # application title
-  titlePanel(title       = "Formula 1: Race locations and results",
-             windowTitle = "fone"),
+  # import google fonts
+  tags$head(
+    tags$style(
+      HTML("
+        @import url('//fonts.googleapis.com/css?family=Lobster|Cabin:400,700');
+        @import url('//fonts.googleapis.com/css?family=Quicksand|Cabin:400,700');
+      ")
+    )
+  ),
+
+  # embed css
+  titlePanel(
+    title = list(
+              h1("fone", style = "font-family: 'Lobster', cursive;
+                        font-weight: 500; line-height: 1.1; color: #006dcc;"
+                 ),
+              h4("Formula 1 race presenter",
+                  style = "font-family: 'Quicksand', cursive;
+                  font-weight: 500; line-height: 0.3; color: #000000;")
+              ),
+    windowTitle = "fone"
+    ),
+
+  tags$br(),
 
   # user inputs (rendered by server)
   fluidRow(
