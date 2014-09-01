@@ -123,10 +123,10 @@ shinyServer(function(input, output, session) {
     loc[[paste0("y", input$year)]]
   })
 
-  # focus "race location tab" when user selects another year
+  # focus world map when user selects another year
   observe({
     input$year
-    updateTabsetPanel(session, inputId = "whichTab", selected = "location")
+    updateTabsetPanel(session, inputId = "whichTab", selected = "map")
   })
 
   # retrieve year and round of last updated race in Ergast database

@@ -45,7 +45,7 @@ shinyUI(fluidPage(
 
       tabPanel(title = "Race locations",
                showOutput("map", "leaflet"),
-               value = "location"
+               value = "map"
                ),
 
       tabPanel(title = "Race result",
