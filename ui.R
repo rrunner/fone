@@ -42,17 +42,22 @@ shinyUI(fluidPage(
   # display plot and result list in tabs
   mainPanel(
     tabsetPanel(
-      tabPanel("Race locations", showOutput("map", "leaflet"),
-               value = "location"),
-      tabPanel("Race results",
+
+      tabPanel(title = "Race locations",
+               showOutput("map", "leaflet"),
+               value = "location"
+               ),
+
+      tabPanel(title = "Race result",
 
                # uiOutput("wikipedia") returns
                # <div class="shiny-html-output"></div>
                # if wikipedia object is NULL (no output in UI)
                uiOutput("wikipedia"),
-
                tags$br(),
-               uiOutput("text_or_table"), value = "result"),
+               uiOutput("text_or_table"),
+               value = "result"
+               ),
       id   = "whichTab",
       type = "pills"
       ),
