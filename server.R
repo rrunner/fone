@@ -117,8 +117,8 @@ get_position <- function(d, circuit) {
 # server logic
 shinyServer(function(input, output, session) {
 
-  # retrieve location data
-  local_data <- reactive({
+  # retrieve all races for selected year
+  selected_year <- reactive({
     download_locations(input$year)
     loc[[paste0("y", input$year)]]
   })
@@ -152,9 +152,9 @@ shinyServer(function(input, output, session) {
     # test for NULL when the app starts and UI list is not yet created
     if (is.null(input$year)) return()
     if (input$year == yr()$last_year) {
-      local_data()[1:yr()$last_round, "circuit"]
+      selected_year()[1:yr()$last_round, "circuit"]
     } else {
-      local_data()[ ,"circuit"]
+      selected_year()[ ,"circuit"]
     }
   })
 
@@ -168,17 +168,17 @@ shinyServer(function(input, output, session) {
   result_data <- reactive({
     # return NULL if circuit is not selected (default behaviour)
     if (input$circuit == "") return()
-    round <- local_data()[local_data()$circuit == input$circuit, "round"]
+    round <- selected_year()[selected_year()$circuit == input$circuit, "round"]
 
     # Issue #1
     # Replicate issue:
     # - browse the result tab and select a circuit (*)
     # - select a new year
-    # -  -> local_data() contains data for the new selected year
+    # -  -> selected_year() contains data for the new selected year
     # -  -> circuit_list gets updated
     # - you would expect that input$circuit == ""
     #    -> this is not the case since it contains the previous value (at *)
-    # - an error occurs if local_data() does not contain input$circuit
+    # - an error occurs if selected_year() does not contain input$circuit
     # Resolve:
     # - if error, round is evaluated to logical(0)
     # - fix by testing on zero length
@@ -207,7 +207,7 @@ shinyServer(function(input, output, session) {
   output$wikipedia <- renderUI({
     # return NULL if circuit is not selected (default behaviour)
     if (input$circuit == "") return()
-    url <- local_data()[local_data()$circuit == input$circuit, "url"]
+    url <- selected_year()[selected_year()$circuit == input$circuit, "url"]
 
     # this guardian is related to Issue #1
     # url is character(0) if error
@@ -224,7 +224,7 @@ shinyServer(function(input, output, session) {
 
   # pass map to output (render UI)
   output$map <- renderMap({
-    positions <- local_data()[ ,c("circuit", "lat", "long")]
+    positions <- selected_year()[ ,c("circuit", "lat", "long")]
 
     # leaflet map
     lmap <- Leaflet$new()
