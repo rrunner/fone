@@ -123,6 +123,12 @@ shinyServer(function(input, output, session) {
     loc[[paste0("y", input$year)]]
   })
 
+  # retrieve selected circuit
+  selected_circuit <- reactive({
+    if (length(input$circuit) == 0 || input$circuit == "") return()
+    selected_year()[selected_year()$circuit == input$circuit, ]
+  })
+
   # focus world map when user selects another year
   observe({
     input$year
@@ -167,22 +173,23 @@ shinyServer(function(input, output, session) {
   # retrieve result data
   result_data <- reactive({
     # return NULL if circuit is not selected (default behaviour)
-    if (input$circuit == "") return()
-    round <- selected_year()[selected_year()$circuit == input$circuit, "round"]
+    if (is.null(selected_circuit())) return()
+    round <- as.numeric(selected_circuit()["round"])
+
 
     # Issue #1
     # Replicate issue:
     # - browse the result tab and select a circuit (*)
     # - select a new year
-    # -  -> selected_year() contains data for the new selected year
     # -  -> circuit_list gets updated
-    # - you would expect that input$circuit == ""
-    #    -> this is not the case since it contains the previous value (at *)
+    # - would expect that input$circuit == "" and selected_year() becomes NULL
+    #    -> instead selected_year() contains data for the new selected year
+    #    -> input$circuit holds previous value (at *)
     # - an error occurs if selected_year() does not contain input$circuit
     # Resolve:
-    # - if error, round is evaluated to logical(0)
-    # - fix by testing on zero length
-    if (length(round) == 0) return()
+    # - if error, round is evaluated to NA
+    # - fix by testing on is.na()
+    if (is.na(round)) return()
 
     download_results(input$year, round)
     res[[paste0("y", input$year)]][[round]]
@@ -206,11 +213,13 @@ shinyServer(function(input, output, session) {
   # pass Wikipedia link to output (render UI)
   output$wikipedia <- renderUI({
     # return NULL if circuit is not selected (default behaviour)
-    if (input$circuit == "") return()
-    url <- selected_year()[selected_year()$circuit == input$circuit, "url"]
+    if (is.null(selected_circuit())) return()
+    url <- selected_circuit()[ ,"url"]
 
     # this guardian is related to Issue #1
-    # url is character(0) if error
+    # Resolve:
+    # - if error, url is evaluated to character(0)
+    # - fix by testing on zero length
     if (length(url) == 0) return()
 
     tags$a(href = url, target = "_blank", "Race info on Wikipedia")
