@@ -106,14 +106,6 @@ convert_results <- function(d, no_drivers = length(d)) {
 
 
 
-# get position for any given circuit
-get_position <- function(d, circuit) {
-  d[d$circuit == circuit, c("lat", "long")]
-}
-
-
-
-
 # server logic
 shinyServer(function(input, output, session) {
 
@@ -233,17 +225,17 @@ shinyServer(function(input, output, session) {
 
   # pass map to output (render UI)
   output$map <- renderMap({
-    positions <- selected_year()[ ,c("circuit", "lat", "long")]
 
     # leaflet map
     lmap <- Leaflet$new()
     lmap$set(width = 850, height = 420)
 
-    if (!is.null(input$circuit) && input$circuit != "") {
-      pos <- get_position(positions, input$circuit)
-      lmap$setView(c(pos$lat, pos$long), zoom = 12)
-      lmap$marker(c(pos$lat, pos$long), bindPopup = input$circuit)
+    if (!is.null(selected_circuit())) {
+      circuit <- selected_circuit()[ ,c("circuit", "lat", "long")]
+      lmap$setView(c(circuit$lat, circuit$long), zoom = 12)
+      lmap$marker(c(circuit$lat, circuit$long), bindPopup = circuit$circuit)
     } else {
+      positions <- selected_year()[ ,c("circuit", "lat", "long")]
       lmap$setView(c(20, 15), zoom = 2)
       for (i in seq(nrow(positions))) {
         lmap$marker(c(positions$lat[i], positions$long[i]),
