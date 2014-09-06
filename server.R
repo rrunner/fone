@@ -117,7 +117,7 @@ shinyServer(function(input, output, session) {
 
   # retrieve selected circuit
   selected_circuit <- reactive({
-    if (length(input$circuit) == 0 || input$circuit == "") return()
+    if (length(input$circuit) == 0L || input$circuit == "") return()
     selected_year()[selected_year()$circuit == input$circuit, ]
   })
 
@@ -212,7 +212,7 @@ shinyServer(function(input, output, session) {
     # Resolve:
     # - if error, url is evaluated to character(0)
     # - fix by testing on zero length
-    if (length(url) == 0) return()
+    if (length(url) == 0L) return()
 
     tags$a(href = url, target = "_blank", "Race info on Wikipedia")
     })
