@@ -150,7 +150,7 @@ shinyServer(function(input, output, session) {
   # generate circuit list for past race events
   circuits <- reactive({
     # test for NULL when the app starts and UI list is not yet created
-    if (is.null(input$year)) return(NULL)
+    if (is.null(input$year)) return()
     if (input$year == yr()$last_year) {
       local_data()[1:yr()$last_round, "circuit"]
     } else {
