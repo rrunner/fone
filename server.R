@@ -145,21 +145,19 @@ shinyServer(function(input, output, session) {
                 choices = c(seq(yr()$last_year, 1950, by = -1)))
   })
 
-  # generate circuit list for past race events
-  circuits <- reactive({
+  # generate circuits for past race events dynamically (render UI)
+  output$circuit_list <- renderUI({
     # test for NULL when the app starts and UI list is not yet created
     if (is.null(input$year)) return()
-    if (input$year == yr()$last_year) {
-      selected_year()[1:yr()$last_round, "circuit"]
-    } else {
-      selected_year()[ ,"circuit"]
-    }
-  })
 
-  # generate circuits dynamically (render UI)
-  output$circuit_list <- renderUI({
+    if (input$year == yr()$last_year) {
+      circuits <- selected_year()[1:yr()$last_round, "circuit"]
+    } else {
+      circuits <- selected_year()[ ,"circuit"]
+    }
+
     selectInput(inputId = "circuit", label = "Select circuit:",
-                choices = c("", circuits()))
+                choices = c("", circuits))
   })
 
   # retrieve result data
