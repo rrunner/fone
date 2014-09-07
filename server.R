@@ -147,8 +147,14 @@ shinyServer(function(input, output, session) {
 
   # generate circuits for past race events dynamically (render UI)
   output$circuit_list <- renderUI({
-    # test for NULL when the app starts and UI list is not yet created
-    if (is.null(input$year)) return()
+    # return empty circuit list when the app starts
+    # - to make the 'year_list' and 'circuit_list' render simultanously in UI
+    if (is.null(input$year)) {
+      return(
+        selectInput(inputId = "circuit", label = "Select circuit:",
+                    choices = "")
+        )
+    }
 
     if (input$year == yr()$last_year) {
       circuits <- selected_year()[1:yr()$last_round, "circuit"]
