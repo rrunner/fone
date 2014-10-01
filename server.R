@@ -201,8 +201,8 @@ shinyServer(function(input, output, session) {
     result_data()
     },
     options = list(
-      iDisplayLength = 10,
-      aLengthMenu    = c(3, 10, nrow(result_data()))
+      pageLength = 10,
+      lengthMenu = c(3, 10, nrow(result_data()))
       )
     )
 
