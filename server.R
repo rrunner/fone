@@ -111,14 +111,17 @@ shinyServer(function(input, output, session) {
 
   # retrieve all races for selected year
   selected_year <- reactive({
-    download_locations(input$year)
-    loc[[paste0("y", input$year)]]
+    input_year <- input$year
+    download_locations(input_year)
+    loc[[paste0("y", input_year)]]
   })
 
   # retrieve selected circuit
   selected_circuit <- reactive({
-    if (length(input$circuit) == 0L || input$circuit == "") return()
-    selected_year()[selected_year()$circuit == input$circuit, ]
+    input_circuit <- input$circuit
+    selected_year <- selected_year()
+    if (length(input_circuit) == 0L || input_circuit == "") return()
+    selected_year[selected_year$circuit == input_circuit, ]
   })
 
   # focus world map when user selects another year
@@ -169,8 +172,9 @@ shinyServer(function(input, output, session) {
   # retrieve result data
   result_data <- reactive({
     # return NULL if circuit is not selected (default behaviour)
-    if (is.null(selected_circuit())) return()
-    round <- as.numeric(selected_circuit()["round"])
+    selected_circuit <- selected_circuit()
+    if (is.null(selected_circuit)) return()
+    round <- as.numeric(selected_circuit["round"])
 
 
     # Issue #1
@@ -187,8 +191,9 @@ shinyServer(function(input, output, session) {
     # - fix by testing on is.na()
     if (is.na(round)) return()
 
-    download_results(input$year, round)
-    res[[paste0("y", input$year)]][[round]]
+    input_year <- input$year
+    download_results(input_year, round)
+    res[[paste0("y", input_year)]][[round]]
   })
 
   # pass text to output
@@ -209,8 +214,9 @@ shinyServer(function(input, output, session) {
   # pass Wikipedia link to output (render UI)
   output$wikipedia <- renderUI({
     # return NULL if circuit is not selected (default behaviour)
-    if (is.null(selected_circuit())) return()
-    url <- selected_circuit()[ ,"url"]
+    selected_circuit <- selected_circuit()
+    if (is.null(selected_circuit)) return()
+    url <- selected_circuit[ ,"url"]
 
     # this guardian is related to Issue #1
     # Resolve:
@@ -234,8 +240,9 @@ shinyServer(function(input, output, session) {
     lmap <- Leaflet$new()
     lmap$set(width = 850, height = 420)
 
-    if (!is.null(selected_circuit())) {
-      circuit <- selected_circuit()[ ,c("circuit", "lat", "long")]
+    selected_circuit <- selected_circuit()
+    if (!is.null(selected_circuit)) {
+      circuit <- selected_circuit[ ,c("circuit", "lat", "long")]
       lmap$setView(c(circuit$lat, circuit$long), zoom = 12)
       lmap$marker(c(circuit$lat, circuit$long), bindPopup = circuit$circuit)
     } else {
