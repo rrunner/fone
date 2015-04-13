@@ -193,18 +193,23 @@ shinyServer(function(input, output, session) {
     lmap <- Leaflet$new()
     lmap$set(width = 850, height = 420)
 
+    # fetch circuit data
     selected_circuit <- selected_circuit()
-    if (!is.null(selected_circuit)) {
-      circuit <- selected_circuit[ ,c("circuit", "lat", "long")]
-      lmap$setView(c(circuit$lat, circuit$long), zoom = 12)
-      lmap$marker(c(circuit$lat, circuit$long), bindPopup = circuit$circuit)
-    } else {
+
+    # draw map
+    if (is.null(selected_circuit) || nrow(selected_circuit) == 0) {
+      # world map
       positions <- selected_year()[ ,c("circuit", "lat", "long")]
       lmap$setView(c(20, 15), zoom = 2)
       for (i in seq(nrow(positions))) {
         lmap$marker(c(positions$lat[i], positions$long[i]),
                     bindPopup = positions$circuit[i])
       }
+    } else {
+      # circuit map
+      circuit <- selected_circuit[ ,c("circuit", "lat", "long")]
+      lmap$setView(c(circuit$lat, circuit$long), zoom = 12)
+      lmap$marker(c(circuit$lat, circuit$long), bindPopup = circuit$circuit)
     }
 
     lmap
