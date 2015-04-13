@@ -1,6 +1,6 @@
 library(shiny)
 library(rCharts)
-library(RJSONIO)
+library(jsonlite)
 
 # current year
 current_year <- as.numeric(format(Sys.Date(), "%Y"))
@@ -19,42 +19,19 @@ res <- setNames(res, paste0("y", seq(current_year, 1950, by = -1)))
 download_locations <- function(year) {
   if (!is.null(loc[[paste0("y", year)]])) return(invisible(0))
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
-  temp <- fromJSON(url, encoding = "utf-8")
+  temp <- fromJSON(url, flatten = TRUE)
 
   # initialise result list for given year
   no_races <- as.numeric(temp$MRData$total)
   res[[paste0("y", year)]] <<- vector(mode = "list", length = no_races)
 
-  loc[[paste0("y", year)]] <<- convert_locations(temp$MRData$RaceTable$Races)
+  keep <- c("round", "Circuit.circuitName", "Circuit.Location.lat",
+            "Circuit.Location.long", "Circuit.Location.locality",
+            "Circuit.url")
+  df <- temp$MRData$RaceTable$Races[ ,keep]
+  names(df) <- c("round", "circuit", "lat", "long", "city", "url")
+  loc[[paste0("y", year)]] <<- df
   invisible(0)
-}
-
-# transform location data into a data.frame object
-convert_locations <- function(d, no_races = length(d)) {
-  local_data <-
-    data.frame(
-      round   = integer(no_races),
-      circuit = character(no_races),
-      lat     = numeric(no_races),
-      long    = numeric(no_races),
-      city    = character(no_races),
-      url     = character(no_races),
-      stringsAsFactors = FALSE
-      )
-
-  for (i in seq(no_races)) {
-    local_data[i, ] <-
-      list(
-        as.integer(d[[i]]$round),
-        d[[i]]$Circuit$circuitName,
-        as.numeric(d[[i]]$Circuit$Location[1]),
-        as.numeric(d[[i]]$Circuit$Location[2]),
-        unname(d[[i]]$Circuit$Location[3]),
-        d[[i]]$url
-        )
-  }
-
-  local_data
 }
 
 # download race results for a given year and race
@@ -62,49 +39,25 @@ download_results <- function(year, round) {
   if (!is.null((res[[paste0("y", year)]][[round]]))) return(invisible(0))
   url <- paste("http://ergast.com/api/f1", year, round, "results.json",
                sep = "/")
-  temp <- fromJSON(url, encoding = "utf-8")
-  res[[paste0("y", year)]][[round]] <<-
-    convert_results(temp$MRData$RaceTable$Races[[1]]$Results)
+  temp <- fromJSON(url, flatten = TRUE)
+  df <- temp$MRData$RaceTable$Races$Results[[1]]
+
+  # concatenate drivers full name
+  df <- within(df, {
+    driver <- paste(Driver.givenName, Driver.familyName)
+    rm(Driver.givenName, Driver.familyName)
+    })
+
+  # reduce data frame and reorder columns
+  keep <- c("position", "number", "driver", "Constructor.name",
+            "laps", "grid", "Time.time", "status", "points")
+  df <- df[ ,keep]
+
+  names(df) <- c("Position", "Number", "Driver", "Constructor",
+                 "Laps", "Grid", "Time", "Status", "Points")
+  res[[paste0("y", year)]][[round]] <<- df
   invisible(0)
 }
-
-# transform results data into a data.frame object
-convert_results <- function(d, no_drivers = length(d)) {
-  result_list <-
-    data.frame(
-      Position    = integer(no_drivers),
-      Number      = integer(no_drivers),
-      Driver      = character(no_drivers),
-      Constructor = character(no_drivers),
-      Laps        = integer(no_drivers),
-      Grid        = integer(no_drivers),
-      Time        = character(no_drivers),
-      Status      = character(no_drivers),
-      Points      = numeric(no_drivers),
-      stringsAsFactors = FALSE
-      )
-
-  for (i in seq(no_drivers)) {
-    result_list[i, ] <-
-      list(
-        as.integer(d[[i]]$position),
-        as.integer(d[[i]]$number),
-        paste(d[[i]]$Driver["givenName"], d[[i]]$Driver["familyName"],
-              sep = " "),
-        d[[i]]$Constructor["name"],
-        as.integer(d[[i]]$laps),
-        as.integer(d[[i]]$grid),
-        if (!is.null(d[[i]]$Time[2])) d[[i]]$Time[2] else "",
-        d[[i]]$status,
-        as.numeric(d[[i]]$points)
-      )
-  }
-
-  result_list
-}
-
-
-
 
 # server logic
 shinyServer(function(input, output, session) {
@@ -135,7 +88,7 @@ shinyServer(function(input, output, session) {
     # make a poll every 10 minutes
     invalidateLater(6e+05, session)
     temp <- fromJSON("http://ergast.com/api/f1/current/last.json",
-                     encoding = "utf-8")
+                     flatten = TRUE)
     list(
       last_year  = as.numeric(temp$MRData$RaceTable$season),
       last_round = as.numeric(temp$MRData$RaceTable$round)
