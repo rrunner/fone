@@ -1,6 +1,6 @@
-library(shiny)
-library(rCharts)
-library(jsonlite)
+library("shiny")
+library("rCharts")
+library("jsonlite")
 
 # current year
 current_year <- as.numeric(format(Sys.Date(), "%Y"))
