@@ -27,7 +27,7 @@ download_locations <- function(year) {
 
   keep <- c("round", "Circuit.circuitName", "Circuit.Location.lat",
             "Circuit.Location.long", "Circuit.Location.locality",
-            "Circuit.url")
+            "url")
   df <- temp$MRData$RaceTable$Races[ ,keep]
   names(df) <- c("round", "circuit", "lat", "long", "city", "url")
   loc[[paste0("y", year)]] <<- df
