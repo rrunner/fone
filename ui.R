@@ -49,11 +49,13 @@ shinyUI(fluidPage(
                ),
 
       tabPanel(title = "Race result",
+               tags$br(),
 
                # uiOutput("wikipedia") returns
                # <div class="shiny-html-output"></div>
                # if wikipedia object is NULL (no output in UI)
                uiOutput("wikipedia"),
+               tags$br(),
                tags$br(),
                uiOutput("text_or_table"),
                value = "result"
