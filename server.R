@@ -88,14 +88,17 @@ shinyServer(function(input, output, session) {
     loc[[paste0("y", input_year)]]
   })
 
-  # retrieve selected circuit
+  # retrieve selected round and circuit
   selected_circuit <- reactive({
     input_circuit <- input$circuit
-    selected_year <- selected_year()
     if (length(input_circuit) == 0L || input_circuit == "") {
       return()
     }
-    selected_year[selected_year$circuit == input_circuit, ]
+    round_circuit <- unlist(strsplit(input_circuit, " - "))
+    round <- as.numeric(round_circuit[1])
+    circuit <- round_circuit[2]
+    sy <- selected_year()
+    sy[sy$round == round & sy$circuit == circuit, ]
   })
 
   # focus world map when user selects another year
@@ -140,9 +143,11 @@ shinyServer(function(input, output, session) {
     }
 
     if (input$year == yr()$last_year) {
-      circuits <- selected_year()[1:yr()$last_round, "circuit"]
+      circuits <- selected_year()[1:yr()$last_round, c("round", "circuit")]
+      circuits <- paste(circuits$round, circuits$circuit, sep = " - ")
     } else {
-      circuits <- selected_year()[, "circuit"]
+      circuits <- selected_year()[, c("round", "circuit")]
+      circuits <- paste(circuits$round, circuits$circuit, sep = " - ")
     }
 
     selectInput(
