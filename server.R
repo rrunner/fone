@@ -2,6 +2,7 @@ library("shiny")
 library("leaflet")
 library("DT")
 library("jsonlite")
+library("curl")
 
 # current year
 current_year <- as.numeric(format(Sys.Date(), "%Y"))
