@@ -1,5 +1,6 @@
 library("shiny")
 library("leaflet")
+library("DT")
 library("jsonlite")
 
 # add this dependency to prevent shinyApps build error
@@ -188,7 +189,7 @@ shinyServer(function(input, output, session) {
   })
 
   # pass table to output
-  output$table <- renderDataTable(
+  output$table <- renderDT(
     {
       result_data()
     },
@@ -223,7 +224,7 @@ shinyServer(function(input, output, session) {
     if (is.null(result_data())) {
       return(textOutput("text"))
     }
-    dataTableOutput("table")
+    DTOutput("table")
   })
 
   # pass map to output (render UI)
