@@ -21,7 +21,9 @@ res <- setNames(res, paste0("y", seq(current_year, 1950, by = -1)))
 
 # download race locations for a given year
 download_locations <- function(year) {
-  if (!is.null(loc[[paste0("y", year)]])) return(invisible(0))
+  if (!is.null(loc[[paste0("y", year)]])) {
+    return(invisible(0))
+  }
   url <- paste0("http://ergast.com/api/f1/", year, ".json")
   temp <- fromJSON(url, flatten = TRUE)
 
@@ -29,10 +31,15 @@ download_locations <- function(year) {
   no_races <- as.numeric(temp$MRData$total)
   res[[paste0("y", year)]] <<- vector(mode = "list", length = no_races)
 
-  keep <- c("round", "Circuit.circuitName", "Circuit.Location.lat",
-            "Circuit.Location.long", "Circuit.Location.locality",
-            "url")
-  df <- temp$MRData$RaceTable$Races[ ,keep]
+  keep <- c(
+    "round",
+    "Circuit.circuitName",
+    "Circuit.Location.lat",
+    "Circuit.Location.long",
+    "Circuit.Location.locality",
+    "url"
+  )
+  df <- temp$MRData$RaceTable$Races[, keep]
   names(df) <- c("round", "circuit", "lat", "long", "city", "url")
   loc[[paste0("y", year)]] <<- df
   invisible(0)
@@ -40,9 +47,12 @@ download_locations <- function(year) {
 
 # download race results for a given year and race
 download_results <- function(year, round) {
-  if (!is.null((res[[paste0("y", year)]][[round]]))) return(invisible(0))
+  if (!is.null((res[[paste0("y", year)]][[round]]))) {
+    return(invisible(0))
+  }
   url <- paste("http://ergast.com/api/f1", year, round, "results.json",
-               sep = "/")
+    sep = "/"
+  )
   temp <- fromJSON(url, flatten = TRUE)
   df <- temp$MRData$RaceTable$Races$Results[[1]]
 
@@ -50,15 +60,19 @@ download_results <- function(year, round) {
   df <- within(df, {
     driver <- paste(Driver.givenName, Driver.familyName)
     rm(Driver.givenName, Driver.familyName)
-    })
+  })
 
   # reduce data frame and reorder columns
-  keep <- c("position", "number", "driver", "Constructor.name",
-            "laps", "grid", "Time.time", "status", "points")
-  df <- df[ ,keep]
+  keep <- c(
+    "position", "number", "driver", "Constructor.name",
+    "laps", "grid", "Time.time", "status", "points"
+  )
+  df <- df[, keep]
 
-  names(df) <- c("Position", "Number", "Driver", "Constructor",
-                 "Laps", "Grid", "Time", "Status", "Points")
+  names(df) <- c(
+    "Position", "Number", "Driver", "Constructor",
+    "Laps", "Grid", "Time", "Status", "Points"
+  )
   res[[paste0("y", year)]][[round]] <<- df
   invisible(0)
 }
@@ -77,7 +91,9 @@ shinyServer(function(input, output, session) {
   selected_circuit <- reactive({
     input_circuit <- input$circuit
     selected_year <- selected_year()
-    if (length(input_circuit) == 0L || input_circuit == "") return()
+    if (length(input_circuit) == 0L || input_circuit == "") {
+      return()
+    }
     selected_year[selected_year$circuit == input_circuit, ]
   })
 
@@ -92,7 +108,8 @@ shinyServer(function(input, output, session) {
     # make a poll every 10 minutes
     invalidateLater(6e+05, session)
     temp <- fromJSON("http://ergast.com/api/f1/current/last.json",
-                     flatten = TRUE)
+      flatten = TRUE
+    )
     list(
       last_year  = as.numeric(temp$MRData$RaceTable$season),
       last_round = as.numeric(temp$MRData$RaceTable$round)
@@ -101,8 +118,10 @@ shinyServer(function(input, output, session) {
 
   # generate years dynamically (render UI)
   output$year_list <- renderUI({
-    selectInput(inputId = "year", label = "Select year:",
-                choices = c(seq(yr()$last_year, 1950, by = -1)))
+    selectInput(
+      inputId = "year", label = "Select year:",
+      choices = c(seq(yr()$last_year, 1950, by = -1))
+    )
   })
 
   # generate circuits for past race events dynamically (render UI)
@@ -111,26 +130,34 @@ shinyServer(function(input, output, session) {
     # - to make the 'year_list' and 'circuit_list' render simultanously in UI
     if (is.null(input$year)) {
       return(
-        selectInput(inputId = "circuit", label = "Select circuit:",
-                    choices = "")
+        selectInput(
+          inputId = "circuit",
+          label = "Select circuit:",
+          choices = ""
         )
+      )
     }
 
     if (input$year == yr()$last_year) {
       circuits <- selected_year()[1:yr()$last_round, "circuit"]
     } else {
-      circuits <- selected_year()[ ,"circuit"]
+      circuits <- selected_year()[, "circuit"]
     }
 
-    selectInput(inputId = "circuit", label = "Select circuit:",
-                choices = c("", circuits))
+    selectInput(
+      inputId = "circuit",
+      label = "Select circuit:",
+      choices = c("", circuits)
+    )
   })
 
   # retrieve result data
   result_data <- reactive({
     # return NULL if circuit is not selected (default behaviour)
     selected_circuit <- selected_circuit()
-    if (is.null(selected_circuit)) return()
+    if (is.null(selected_circuit)) {
+      return()
+    }
     round <- as.numeric(selected_circuit["round"])
 
 
@@ -146,7 +173,9 @@ shinyServer(function(input, output, session) {
     # Resolve:
     # - if error, round is evaluated to NA
     # - fix by testing on is.na()
-    if (is.na(round)) return()
+    if (is.na(round)) {
+      return()
+    }
 
     input_year <- input$year
     download_results(input_year, round)
@@ -159,34 +188,41 @@ shinyServer(function(input, output, session) {
   })
 
   # pass table to output
-  output$table <- renderDataTable({
-    result_data()
+  output$table <- renderDataTable(
+    {
+      result_data()
     },
     options = list(
       pageLength = 10,
       lengthMenu = c(3, 10, nrow(result_data()))
-      )
     )
+  )
 
   # pass Wikipedia link to output (render UI)
   output$wikipedia <- renderUI({
     # return NULL if circuit is not selected (default behaviour)
     selected_circuit <- selected_circuit()
-    if (is.null(selected_circuit)) return()
-    url <- selected_circuit[ ,"url"]
+    if (is.null(selected_circuit)) {
+      return()
+    }
+    url <- selected_circuit[, "url"]
 
     # this guardian is related to Issue #1
     # Resolve:
     # - if error, url is evaluated to character(0)
     # - fix by testing on zero length
-    if (length(url) == 0L) return()
+    if (length(url) == 0L) {
+      return()
+    }
 
     tags$a(href = url, target = "_blank", "Race info on Wikipedia")
-    })
+  })
 
   # pass text or table to output (render UI)
   output$text_or_table <- renderUI({
-    if (is.null(result_data())) return(textOutput("text"))
+    if (is.null(result_data())) {
+      return(textOutput("text"))
+    }
     dataTableOutput("table")
   })
 
@@ -203,15 +239,16 @@ shinyServer(function(input, output, session) {
     # draw map
     if (is.null(selected_circuit) || nrow(selected_circuit) == 0) {
       # world map
-      positions <- selected_year()[ ,c("circuit", "lat", "long")]
+      positions <- selected_year()[, c("circuit", "lat", "long")]
       lmap$setView(c(20, 15), zoom = 2)
       for (i in seq(nrow(positions))) {
         lmap$marker(c(positions$lat[i], positions$long[i]),
-                    bindPopup = positions$circuit[i])
+          bindPopup = positions$circuit[i]
+        )
       }
     } else {
       # circuit map
-      circuit <- selected_circuit[ ,c("circuit", "lat", "long")]
+      circuit <- selected_circuit[, c("circuit", "lat", "long")]
       lmap$setView(c(circuit$lat, circuit$long), zoom = 12)
       lmap$marker(c(circuit$lat, circuit$long), bindPopup = circuit$circuit)
     }
