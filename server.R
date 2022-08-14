@@ -3,10 +3,6 @@ library("leaflet")
 library("DT")
 library("jsonlite")
 
-# add this dependency to prevent shinyApps build error
-# this seems to be related to jsonlite
-library("curl")
-
 # current year
 current_year <- as.numeric(format(Sys.Date(), "%Y"))
 
