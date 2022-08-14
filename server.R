@@ -52,12 +52,9 @@ download_results <- function(year, round) {
   )
   temp <- fromJSON(url, flatten = TRUE)
   df <- temp$MRData$RaceTable$Races$Results[[1]]
-
-  # concatenate drivers full name
-  df <- within(df, {
-    driver <- paste(Driver.givenName, Driver.familyName)
-    rm(Driver.givenName, Driver.familyName)
-  })
+  df$driver <- paste(df$Driver.givenName, df$Driver.familyName)
+  df$Driver.givenName <- NULL
+  df$Driver.familyName <- NULL
 
   # reduce data frame and reorder columns
   keep <- c(
