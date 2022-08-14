@@ -1,5 +1,5 @@
 library("shiny")
-library("rCharts")
+library("leaflet")
 library("jsonlite")
 
 # add this dependency to prevent shinyApps build error
@@ -227,11 +227,11 @@ shinyServer(function(input, output, session) {
   })
 
   # pass map to output (render UI)
-  output$map <- renderMap({
+  output$map <- renderLeaflet({
 
     # leaflet map
-    lmap <- Leaflet$new()
-    lmap$set(width = 850, height = 420)
+    lmap <- leaflet()
+    lmap <- addTiles(lmap)
 
     # fetch circuit data
     selected_circuit <- selected_circuit()
@@ -240,17 +240,28 @@ shinyServer(function(input, output, session) {
     if (is.null(selected_circuit) || nrow(selected_circuit) == 0) {
       # world map
       positions <- selected_year()[, c("circuit", "lat", "long")]
-      lmap$setView(c(20, 15), zoom = 2)
-      for (i in seq(nrow(positions))) {
-        lmap$marker(c(positions$lat[i], positions$long[i]),
-          bindPopup = positions$circuit[i]
-        )
-      }
+      lmap <- setView(lmap, lng = 15, lat = 20, zoom = 2)
+      lmap <- addMarkers(
+        lmap,
+        lng = as.numeric(positions$long),
+        lat = as.numeric(positions$lat),
+        popup = positions$circuit
+      )
     } else {
       # circuit map
       circuit <- selected_circuit[, c("circuit", "lat", "long")]
-      lmap$setView(c(circuit$lat, circuit$long), zoom = 12)
-      lmap$marker(c(circuit$lat, circuit$long), bindPopup = circuit$circuit)
+      lmap <- setView(
+        lmap,
+        lng = as.numeric(circuit$long),
+        lat = as.numeric(circuit$lat),
+        zoom = 12
+      )
+      lmap <- addMarkers(
+        lmap,
+        lng = as.numeric(circuit$long),
+        lat = as.numeric(circuit$lat),
+        popup = circuit$circuit
+      )
     }
 
     lmap

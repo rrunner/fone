@@ -1,5 +1,5 @@
 library("shiny")
-library("rCharts")
+library("leaflet")
 
 # user interface
 shinyUI(fluidPage(
@@ -7,21 +7,25 @@ shinyUI(fluidPage(
   # import google fonts
   tags$head(
     tags$style(
-      HTML("
-        @import url('//fonts.googleapis.com/css?family=Lobster|Cabin:400,700');
-        @import url('//fonts.googleapis.com/css?family=Quicksand|Cabin:400,700');
-      ")
+      HTML(
+        "@import url('//fonts.googleapis.com/css?family=Lobster|Cabin:400,700');
+         @import url('//fonts.googleapis.com/css?family=Quicksand|Cabin:400,700');"
+      )
     )
   ),
 
   # embed css
   titlePanel(
     title = list(
-      h1("fone", style = "font-family: 'Lobster', cursive;
-                        font-weight: 500; line-height: 1.1; color: #006dcc;"),
-      h4("Formula 1 race presenter",
+      h1(
+        "fone",
+        style = "font-family: 'Lobster', cursive;
+                 font-weight: 500; line-height: 1.1; color: #006dcc;"
+      ),
+      h4(
+        "Formula 1 race presenter",
         style = "font-family: 'Quicksand', cursive;
-                  font-weight: 500; line-height: 0.3; color: #000000;"
+                 font-weight: 500; line-height: 0.3; color: #000000;"
       )
     ),
     windowTitle = "fone"
@@ -46,7 +50,7 @@ shinyUI(fluidPage(
 
       tabPanel(
         title = "Race locations",
-        showOutput("map", "leaflet"),
+        leafletOutput("map", width = 850, height = 420),
         value = "map"
       ),
       tabPanel(
